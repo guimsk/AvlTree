@@ -25,8 +25,8 @@ Root* initializeRoot(int rootInfo){
 
 Root* insertRoot(Root* tree, int rootInfo){
     if (tree==NULL) return initializeRoot(rootInfo);
-    else if (rootInfo<(tree->info)) tree->esquerda = insertRoot(tree->esquerda, rootInfo);
-    else tree->direita =  insertRoot(tree->direita, rootInfo);
+    else if (rootInfo<(tree->info)) {tree->altura+=1; tree->esquerda = insertRoot(tree->esquerda, rootInfo);}
+    else {tree->altura+=1; tree->direita =  insertRoot(tree->direita, rootInfo);}
     return tree;
 
 }
@@ -187,17 +187,77 @@ void printTree(Root* tree){
 
 }
 
-void updateRoot(Root* tree, int altura){
+void updateAltura(Root* tree, int altura){
 
 	if (tree == NULL) return;
 	else{
-	tree->altura = altura;
-	updateAltura(tree->esquerda, altura+1);
-	updateAltura(tree->direita, altura+1);
+        tree->altura = altura;
+        updateAltura(tree->esquerda, altura+1);
+        updateAltura(tree->direita, altura+1);
+        return;
 	}
-
 }
 
+void updateBalancingFactor(Root* tree){
+    if (tree == NULL) return;
+	else{
+
+        if((tree->esquerda!=NULL)&&(tree->direita!=NULL)){
+            tree->fatorBalanceamento = (tree->direita->altura)-(tree->esquerda->altura);
+        }
+        else if(tree->esquerda!=NULL){
+            tree->fatorBalanceamento = (tree->esquerda->altura);
+        }
+        else if(tree->direita!=NULL){
+            tree->fatorBalanceamento = (tree->direita->altura);
+        }
+        else{
+            tree->fatorBalanceamento = 0;
+        }
+        updateBalancingFactor(tree->esquerda);
+        updateBalancingFactor(tree->direita);
+	}
+}
+Root* turnLeft(Root* tree){
+    printf("left\n");
+    Root* aux = tree->direita;
+    tree->direita = aux->esquerda;
+    aux->esquerda = tree;
+    return aux;
+}
+Root* turnRight(Root* tree){
+    Root* aux = tree->esquerda;
+    tree->esquerda = aux->direita;
+    aux->direita = tree;
+    return aux;
+}
+
+Root* Balancing(Root* tree){
+    if (tree == NULL) return tree;
+    else if (tree->fatorBalanceamento==2){
+
+        if(tree->direita->fatorBalanceamento==1){
+            return turnLeft(tree);
+        }
+        else if(tree->esquerda->fatorBalanceamento==-1){
+            return turnRight(tree);
+        }
+    }
+    else if (tree->fatorBalanceamento==-2){
+        
+        if(tree->direita->fatorBalanceamento==1){
+            return turnRight(tree);
+        }
+        else if(tree->esquerda->fatorBalanceamento==-1){
+            return turnLeft(tree);
+        }
+    }
+    else{
+        Balancing(tree->esquerda);
+        Balancing(tree->direita);
+        return tree;
+    }   
+}
 // void showNode(Root* tree){
 
 // 	printf("info: %d, altura: %d, fatorBalanceamento: %d.", tree->info, tree->altura, tree->fatorBalanceamento);
@@ -233,10 +293,15 @@ int main (){
             tree = deleteRoot(tree, escolha);
         }
         else if(selecao==3){
+        
+            updateBalancingFactor(tree);
+            tree = Balancing(tree);
             updateAltura(tree, 0);
+            updateBalancingFactor(tree);
             printTree(tree);
         }
         else selecao = 0;
     }
     return 0;
 }
+
